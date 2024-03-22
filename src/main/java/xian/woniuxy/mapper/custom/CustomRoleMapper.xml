@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="xian.woniuxy.mapper.custom.CustomRoleMapper" >
+  <resultMap id="BaseResultMap" type="xian.woniuxy.entity.Role" >
+    <id column="role_id" property="roleId" jdbcType="INTEGER" />
+    <result column="role_name" property="roleName" jdbcType="VARCHAR" />
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    role_id,role_name
+  </sql>
+  <select id="findRoleWithPermissionByRoleId" resultMap="rm">
+    select
+        r.role_id,r.role_name,p.*
+    from role_permission rp
+    right join role r
+    on rp.role_id = r.role_id
+    left join permission p
+    on rp.permission_id = p.permission_id
+    where r.role_id = #{roleId};
+  </select>
+  
+  <resultMap id="rm" type="xian.woniuxy.entity.Role" extends="BaseResultMap">
+    <collection property="permissions" ofType="xian.woniuxy.entity.Permission">
+      <id column="permission_id" property="permissionId" jdbcType="INTEGER" />
+      <result column="permission_name" property="permissionName" jdbcType="VARCHAR" />
+      <result column="parent_id" property="parentId" jdbcType="INTEGER" />
+      <result column="component" property="component" jdbcType="VARCHAR" />
+      <result column="path" property="path" jdbcType="VARCHAR" />
+      <result column="permission_type" property="permissionType" jdbcType="VARCHAR" />
+      <result column="permission_expr" property="permissionExpr" jdbcType="VARCHAR" />
+    </collection>
+  </resultMap>
+  
+  <insert id="distPermToRole">
+    insert into role_permission values
+    <foreach collection="permissionIds" item="permissionId" separator=",">
+      (#{roleId},#{permissionId})
+    </foreach>
+  </insert>
+  
+  <delete id="revokePermFromRole">
+    delete from role_permission
+    where role_id = #{roleId}
+  </delete>
+  
+</mapper>
